@@ -30,7 +30,7 @@ public class ApiController {
     @Autowired
     private AsyncTasksService asyncTasksService;
 
-    @RequestMapping("/users/async")
+    @RequestMapping("/users/asyncCompletable")
     public DeferredResult<List<String>> getUsersAsync() {
 
         DeferredResult< List<String> > result = new DeferredResult< List<String> >();
@@ -43,7 +43,7 @@ public class ApiController {
 
             try {
 
-                Thread.sleep( 5 * 1000 );
+                Thread.sleep( 2 * 1000 );
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -57,26 +57,25 @@ public class ApiController {
         return result;
     }
 
-    @RequestMapping("/users/asyncOtherPool")
-    public DeferredResult<List<String>> getUsersAsyncOtherPool() {
+    @RequestMapping("/users/asyncCompletableOtherPool")
+    public DeferredResult< String > getUsersAsyncOtherPool() {
 
-        DeferredResult< List<String> > result = new DeferredResult< List<String> >();
+        DeferredResult< String > result = new DeferredResult< String >();
 
         CompletableFuture.runAsync( () -> {
 
             System.out.println( " GetUsersAsyncOtherPool is running... " + Thread.currentThread().getName() );
-            List<String> names = new ArrayList<String>();
-            names.add( "Holanda Junior" );
+
 
             try {
 
-                Thread.sleep( 5 * 1000 );
+                Thread.sleep( 2 * 1000 );
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            result.setResult( names );
+            result.setResult( "Holanda Junior" );
 
         },  taskExecutor );
 
@@ -86,14 +85,18 @@ public class ApiController {
     }
 
     @RequestMapping("/users/asyncSpring")
-    public List<String> getUsersAsyncSpring() {
+    public String getUsersAsyncSpring() {
 
         try {
 
-            List<String> result = asyncTasksService.getUsersFuture().get();
+            String result = asyncTasksService.getUsersFuture().get();
+            String resultOther = asyncTasksService.getUsersFutureDefaultPool().get();
+
             System.out.println( " Servlet thread freed... " );
             System.out.println( "Async Spring returning..." );
-            return result;
+
+            return result + resultOther;
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
