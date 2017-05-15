@@ -2,16 +2,11 @@ package br.holandajunior.asyncpools.controllers;
 
 import br.holandajunior.asyncpools.services.AsyncTasksService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -30,16 +25,17 @@ public class ApiController {
     @Autowired
     private AsyncTasksService asyncTasksService;
 
+    //it will execute async task allowing servlet's thread execute another request
     @RequestMapping("/users/asyncCompletable")
-    public DeferredResult<List<String>> getUsersAsync() {
+    public DeferredResult< String > getUsersAsync() {
 
-        DeferredResult< List<String> > result = new DeferredResult< List<String> >();
+        DeferredResult< String > result = new DeferredResult< String >();
 
+
+        // The difference between runAsync and supplyAsync is just supplyAsync provide a return value because it waits for Supply<U> instance
         CompletableFuture.runAsync( () -> {
 
-            System.out.println( " GetUsersAsync is running... " + Thread.currentThread().getName() );
-            List<String> names = new ArrayList<String>();
-            names.add( "Holanda Junior" );
+            System.out.println( " GetAsyncCompletable is running... " + Thread.currentThread().getName() );
 
             try {
 
@@ -49,7 +45,7 @@ public class ApiController {
                 e.printStackTrace();
             }
 
-            result.setResult( names );
+            result.setResult( "Holanda Junior");
         });
 
         System.out.println( " Servlet thread freed... " );
@@ -57,6 +53,38 @@ public class ApiController {
         return result;
     }
 
+    //it will execute async task allowing servlet's thread execute another request
+    @RequestMapping("/users/asyncCompletableOther")
+    public DeferredResult<String> getUsersAsyncOther() {
+
+        DeferredResult< String > result = new DeferredResult< String >();
+
+        CompletableFuture.supplyAsync( () -> {
+
+            System.out.println( " GetAsyncCompletableOther is running... " + Thread.currentThread().getName() );
+
+            try {
+
+                Thread.sleep( 2 * 1000 );
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return "Holanda Junior";
+
+        }).whenCompleteAsync( ( value, throwable ) -> {
+
+            System.out.println( " GetAsyncCompletableOther result is being returned... " + Thread.currentThread().getName() );
+            result.setResult( value );
+        } );
+
+        System.out.println( " Servlet thread freed... " );
+
+        return result;
+    }
+
+    //it will execute async task allowing servlet's thread execute another request
     @RequestMapping("/users/asyncCompletableOtherPool")
     public DeferredResult< String > getUsersAsyncOtherPool() {
 
@@ -84,6 +112,7 @@ public class ApiController {
         return result;
     }
 
+    // Such tasks will wait for both results, then blocking servlet's thread
     @RequestMapping("/users/asyncSpring")
     public String getUsersAsyncSpring() {
 
@@ -93,7 +122,7 @@ public class ApiController {
             String resultOther = asyncTasksService.getUsersFutureDefaultPool().get();
 
             System.out.println( " Servlet thread freed... " );
-            System.out.println( "Async Spring returning..." );
+            System.out.println( " Async Spring returning..." );
 
             return result + resultOther;
 
@@ -106,6 +135,14 @@ public class ApiController {
         return null;
     }
 
+    @RequestMapping( "/users/asyncCallable" )
+    public Callable<String> getUserCallable() {
+
+        Callable<String> result = asyncTasksService::getName;
+        System.out.println( " Servlet thread freed... " );
+
+        return result;
+    }
 
 
 }

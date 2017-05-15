@@ -15,7 +15,7 @@ import java.util.concurrent.Future;
 @Service
 public class AsyncTasksService {
 
-    @Async("taskExecutor")
+    @Async("taskExecutorAsyncPool") // By default, Async without parameter will allocate thread into default task execution. In this case, taskExecutorAsyncPool
     public Future< String > getUsersFuture() {
 
         System.out.println( " GetUsersFuture Async Spring is running... " + Thread.currentThread().getName() );
@@ -33,7 +33,7 @@ public class AsyncTasksService {
 
     }
 
-    @Async // By default, Async without parameter will allocate thread into default task execution. In this case, taskExecutor
+    @Async // By default, Async without parameter will allocate thread into default task execution. In this case, taskExecutorAsyncPool
     public Future< String > getUsersFutureDefaultPool() {
 
         System.out.println( " GetUsersFuture Async Spring Default Pool is running... " + Thread.currentThread().getName() );
@@ -49,6 +49,13 @@ public class AsyncTasksService {
         AsyncResult< String > result = new AsyncResult<>( "Holanda Junior" );
         return result;
 
+    }
+
+    public String getName() {
+
+        System.out.println( " GetName in service is running... " + Thread.currentThread().getName() );
+
+        return "Holanda Junior";
     }
 
 }
